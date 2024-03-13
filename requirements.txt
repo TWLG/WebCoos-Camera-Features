@@ -1,0 +1,5 @@
+flask
+apscheduler
+ultralytics
+pillow
+python-dotenv
