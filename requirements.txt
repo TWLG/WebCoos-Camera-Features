@@ -1,5 +1,5 @@
 flask
-flask_sqlalchemy
 apscheduler
 ultralytics
 pillow
+python-dotenv

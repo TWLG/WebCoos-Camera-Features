@@ -3,10 +3,10 @@ from ultralytics import YOLO
 from PIL import Image
 from io import BytesIO
 import requests
-import sys
-
+import os
 
 # Define API endpoints.
+
 
 def predict_image(API_KEY):
     headers = {'Authorization': f'Token {
@@ -16,25 +16,25 @@ def predict_image(API_KEY):
 
     response = requests.get(masonboro, headers=headers)
     if response.status_code == 200:
-        print("Successful WebCoos Connection:", response.status_code)
         data = response.json()
-
         url = data['data']['properties']['url']
-        print(url)
     else:
         return "Error: " + str(response.status_code)
 
     response = requests.get(url)
     img = Image.open(BytesIO(response.content))
 
-    model = YOLO('model_all_classes.pt')
+    modelName = 'model_all_classes.pt'
+
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(script_dir, modelName)
+
+    model = YOLO(file_path)
     results = model.predict(img)
 
     # Process results list
     class_probs = []
     for result in results:
-        print('=======result=======')
-
         top5conf = result.probs.top5conf
         top5 = result.probs.top5
 
@@ -43,19 +43,5 @@ def predict_image(API_KEY):
 
         # Sort the list in descending order of probability
         class_probs.sort(key=lambda x: x[2], reverse=True)
-        for class_info in class_probs:
-            print(class_info)
 
-        print('==============')
-    return class_probs.json()
-
-
-def main():
-    if len(sys.argv) > 1:
-        API_KEY = sys.argv[1]
-        predict_image(API_KEY)
-    else:
-        print("No key provided.")
-
-
-main()
+    return class_probs

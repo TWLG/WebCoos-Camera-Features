@@ -1,0 +1,17 @@
+# Use an official Python runtime as a parent image
+FROM python:3.12.2-bullseye
+
+# Set the working directory in the container to /app
+WORKDIR /app
+
+# Add the current directory contents into the container at /app
+ADD . /app
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 5000
+
+# Run flask_app.py when the container launches
+CMD ["python", "flask_app.py"]
+
+#docker run --env-file=.env your_image_name
