@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Flask App</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+      integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+      crossorigin="anonymous"
+    ></script>
+    <script type="text/javascript" charset="utf-8">
+      var socket = io();
+      socket.on("connect", function () {
+        socket.emit("my event", {data: "I'm connected!"});
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Welcome to My Flask App!</h1>
+
+    <div id="Latest-Image-Service" class="circle disabled"></div>
+    <div id="service-text" class=""></div>
+    <script>
+      const LatestImageService = document.getElementById(
+        "Latest-Image-Service"
+      );
+
+      function handleJobError(data) {
+        console.log("Job error: " + data.message);
+        LatestImageService.classList.add("disabled");
+        LatestImageService.classList.remove("enabled");
+        document.getElementById("service-text").innerHTML = data.message;
+      }
+
+      socket.on("IntervalLatestImageJobExecuted", function (data) {
+        console.log("Job executed: " + data.message);
+        LatestImageService.classList.add("enabled");
+        LatestImageService.classList.remove("disabled");
+        document.getElementById("service-text").innerHTML = data.message;
+      });
+
+      socket.on("IntervalLatestImageJobError", function (data) {
+        console.log("Job error: " + data.message);
+        LatestImageService.classList.add("disabled");
+        LatestImageService.classList.remove("enabled");
+        document.getElementById("service-text").innerHTML = data.message;
+      });
+
+      // Update the HTML every 5 seconds
+      setInterval(() => {
+        socket.emit("getLatestImage");
+      }, 5000);
+    </script>
+  </body>
+</html>

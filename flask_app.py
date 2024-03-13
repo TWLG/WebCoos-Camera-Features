@@ -1,84 +1,81 @@
-from flask import Flask, request
+from flask import Flask, render_template, request
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 from datetime import datetime
 from dotenv import load_dotenv
 import requests
-from python_scripts.identify_latest_image.identify_latest_image import predict_image
+from flask_socketio import SocketIO
+from python_scripts.identify_latest_image.IntervalLatestImageService import IntervalLatestImageService
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='pages')
+scheduler = BackgroundScheduler()
+socketIO = SocketIO(app)
 
 # Set the API_KEY
 load_dotenv()
-API_KEY = os.getenv('WEBCOOS_API_KEY')
+app.config['WEBCOOS_API_KEY'] = os.getenv('WEBCOOS_API_KEY')
 
-# Set the default interval (in minutes)
-interval = 30
+scheduler.start()
 
-# Initialize the scheduler
-scheduler = BackgroundScheduler()
-
-
-def run_filter_model():
-    app.logger.info(
-        f"{get_Interval_Latest_Image_Service_Response_Head()} Running Job...")
-    results = predict_image(API_KEY)
-    print(results)
-
-
-def get_Interval_Latest_Image_Service_Response_Head():
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    return f"[{current_time}] (IntervalLatestImageService):"
-
-# Update the interval
+IntervalLatestImageService = IntervalLatestImageService(
+    app, scheduler, socketIO)
 
 
 @app.route('/updateInterval', methods=['POST'])
 def update_interval():
-    global interval
-    new_interval = request.form.get('interval', type=int)
+    """
+    Updates the interval time for the latest image service.
 
-    if new_interval is None:
-        return f"{get_Interval_Latest_Image_Service_Response_Head()} WARNING - Interval unspecified/undefined. Existing value: {interval} (minutes)."
+    This route expects a POST request with a form parameter 'interval' that specifies the new interval value.
+    The interval value should be a positive integer.
 
-    if new_interval < 1:
-        return f"{get_Interval_Latest_Image_Service_Response_Head()} ERROR - Interval must be at least 1 minute"
-
-    prev_interval = interval
-    interval = new_interval
-
-    if scheduler.get_job('interval_latest_image_job'):
-        scheduler.remove_job('interval_latest_image_job')
-
-    scheduler.add_job(
-        id='interval_latest_image_job',
-        func=run_filter_model,
-        trigger='interval',
-        minutes=interval
-    )
-
-    return f"{get_Interval_Latest_Image_Service_Response_Head()} Set interval {prev_interval} --> {interval} (minutes)."
-
-# Set the API key
+    Returns:
+        The result of the IntervalLatestImageService.update_interval() method.
+    """
+    return IntervalLatestImageService.update_interval(int(request.form.get('interval', type=int)))
 
 
 @app.route('/setKey', methods=['POST'])
 def set_key():
+    """
+    Sets the WEBCOOS_API_KEY in the application configuration in the .env, created the file if needed.
+
+    Returns:
+        str: A message indicating that the API key has been set.
+    """
     API_KEY = request.form.get('API_KEY', type=str)
     if API_KEY:
-        app.logger.info('API key set.')
+        app.config['WEBCOOS_API_KEY'] = API_KEY
+        # check if the file exists
+        if os.path.exists('.env'):
+            with open('.env', 'a') as f:
+                # if the WEBCOOS_API_KEY is already in the file, replace it
+                if 'WEBCOOS_API_KEY' in f.read():
+                    f.seek(0)
+                    f.truncate()
+                    f.write(f'WEBCOOS_API_KEY={API_KEY}')
+                else:
+                    f.write(f'\nWEBCOOS_API_KEY={API_KEY}')
+        else:
+            with open('.env', 'w') as f:
+                f.write(f'WEBCOOS_API_KEY={API_KEY}')
+
+        app.logger.info(IntervalLatestImageService.refresh_key())
         return 'API key set.'
-    else:
-        app.logger.warning('API key missing.')
-        return 'API key missing.'
 
 
 @app.route('/checkKey', methods=['POST'])
 def check_key():
+    """
+    Check the validity of the API key.
 
+    Returns:
+        str: A message indicating whether the API key is valid or invalid.
+    """
     user_info_url = 'https://app.webcoos.org/u/api/me/'
     headers = {'Authorization': f'Token {
-        API_KEY}', 'Accept': 'application/json'}
+        app.config['WEBCOOS_API_KEY']}', 'Accept': 'application/json'}
     response_user = requests.get(user_info_url, headers=headers)
     print(response_user.status_code, "asdasdasd")
     if response_user.status_code == 200:
@@ -89,36 +86,39 @@ def check_key():
         return 'Invalid API key.'
 
 
-# Enable the service
+@app.route('/start', methods=['POST'])
+def start():
+    """
+    This function is a route handler for the '/start' endpoint.
+    It is triggered when a POST request is made to the '/start' endpoint.
+    The result of the IntervalLatestImageService.start() method.    """
+    return IntervalLatestImageService.start()
 
 
-@app.route('/enable', methods=['POST'])
-def enable():
-    if not scheduler.get_job('interval_latest_image_job'):
-        scheduler.add_job(
-            id='interval_latest_image_job',
-            func=run_filter_model,
-            trigger='interval',
-            minutes=interval
-        )
+@app.route('/stop', methods=['POST'])
+def stop():
+    """
+    Stops the IntervalLatestImageService.
 
-    app.logger.info('Service Enabled.')
-    return 'Service enabled'
-
-# Disable the service
+    Returns:
+        The result of the IntervalLatestImageService.stop() method.
+    """
+    return IntervalLatestImageService.stop()
 
 
-@app.route('/disable', methods=['POST'])
-def disable():
-    if scheduler.get_job('interval_latest_image_job'):
-        scheduler.remove_job('interval_latest_image_job')
+@app.route('/status', methods=['POST'])
+def status():
+    """
+    Returns the running state of the IntervalLatestImageService.
+    """
+    return IntervalLatestImageService.get_running_state()
 
-    app.logger.info('Service Disabled.')
-    return 'Service disabled'
+
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 
 if __name__ == '__main__':
-
-    scheduler.start()
     app.debug = True
-    app.run()
+    socketIO.run(app)

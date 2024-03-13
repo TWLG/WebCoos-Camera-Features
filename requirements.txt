@@ -3,3 +3,4 @@ apscheduler
 ultralytics
 pillow
 python-dotenv
+flask-socketio
