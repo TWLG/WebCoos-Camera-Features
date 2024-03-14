@@ -36,7 +36,7 @@ def update_interval():
     interval = request.form.get('interval')
     if interval is None:
         # Provide a default value or handle the error appropriately
-        interval = '1'
+        interval = '30'
     result = IntervalLatestImageService.update_interval(int(interval))
     socketIO.emit('interface_console', {'message': result}, namespace='/')
 
