@@ -33,7 +33,14 @@ def update_interval():
     Returns:
         The result of the IntervalLatestImageService.update_interval() method.
     """
-    return IntervalLatestImageService.update_interval(int(request.form.get('interval', type=int)))
+    interval = request.form.get('interval')
+    if interval is None:
+        # Provide a default value or handle the error appropriately
+        interval = '30'
+    result = IntervalLatestImageService.update_interval(int(interval))
+    socketIO.emit('interface_console', {'message': result}, namespace='/')
+
+    return result
 
 
 @app.route('/setKey', methods=['POST'])
@@ -61,7 +68,9 @@ def set_key():
             with open('.env', 'w') as f:
                 f.write(f'WEBCOOS_API_KEY={API_KEY}')
 
-        app.logger.info(IntervalLatestImageService.refresh_key())
+        IntervalLatestImageService.refresh_key()
+        socketIO.emit('interface_console', {
+                      'message': 'API key set.'}, namespace='/')
         return 'API key set.'
 
 
@@ -80,8 +89,12 @@ def check_key():
     print(response_user.status_code, "asdasdasd")
     if response_user.status_code == 200:
         app.logger.info('Valid API key.')
+        socketIO.emit('interface_console', {
+                      'message': 'Valid API key.'}, namespace='/')
         return 'Valid API key.'
     else:
+        socketIO.emit('interface_console', {
+                      'message': 'Invalid API key.'}, namespace='/')
         app.logger.warning('Invalid API key.')
         return 'Invalid API key.'
 
@@ -92,7 +105,10 @@ def start():
     This function is a route handler for the '/start' endpoint.
     It is triggered when a POST request is made to the '/start' endpoint.
     The result of the IntervalLatestImageService.start() method.    """
-    return IntervalLatestImageService.start()
+    result = IntervalLatestImageService.start()
+    socketIO.emit('interface_console', {
+        'message': result}, namespace='/')
+    return result
 
 
 @app.route('/stop', methods=['POST'])
@@ -103,7 +119,10 @@ def stop():
     Returns:
         The result of the IntervalLatestImageService.stop() method.
     """
-    return IntervalLatestImageService.stop()
+    result = IntervalLatestImageService.stop()
+    socketIO.emit('interface_console', {
+        'message': result}, namespace='/')
+    return result
 
 
 @app.route('/status', methods=['POST'])
@@ -111,7 +130,10 @@ def status():
     """
     Returns the running state of the IntervalLatestImageService.
     """
-    return IntervalLatestImageService.get_running_state()
+    result = IntervalLatestImageService.get_running_state()
+    socketIO.emit('interface_console', {
+        'message': result}, namespace='/')
+    return result
 
 
 @app.route('/')

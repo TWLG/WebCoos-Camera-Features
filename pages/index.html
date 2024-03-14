@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>My Flask App</title>
+    <title>WebCoos Console</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles.css') }}"
@@ -19,9 +19,56 @@
     </script>
   </head>
   <body>
-    <h1>Welcome to My Flask App!</h1>
+    <h1>WebCoos Model Server Console</h1>
+    <p>There is likely a lot of bugs in this right now, use gently.</p>
+    <form id="updateInterval" action="/updateInterval" method="post">
+      <label for="interval">Interval:</label><br />
+      <input
+        type="number"
+        id="interval"
+        name="interval"
+        required
+        min="1"
+      /><br />
+      <input type="submit" value="Set Interval" />
+    </form>
 
-    <div id="Latest-Image-Service" class="circle disabled"></div>
+    <form id="setKey" action="/setKey" method="post">
+      <label for="interval">Interval:</label><br />
+      <input type="text" id="API_KEY" name="API_KEY" required /><br />
+      <input type="submit" value="Set API KEY" />
+    </form>
+
+    <form id="checkKey" action="/checkKey" method="post">
+      <input type="submit" value="Check Key" />
+    </form>
+
+    <form id="start" action="/start" method="post">
+      <input type="submit" value="Start" />
+    </form>
+    <form id="stop" action="/stop" method="post">
+      <input type="submit" value="Stop" />
+    </form>
+    <form id="status" action="/status" method="post">
+      <input type="submit" value="Check Running" />
+    </form>
+
+    <div id="console-log" name="console-log" class="console-log">
+      <div>WebCoos Model Interface Log</div>
+    </div>
+
+    <script>
+      function handleSocketEvent(data) {
+        var consoleLog = document.getElementById("console-log");
+        var newLog = document.createElement("div");
+        newLog.innerText = data.message;
+        consoleLog.appendChild(newLog);
+        consoleLog.scrollTop = consoleLog.scrollHeight;
+      }
+
+      socket.on("interface_console", handleSocketEvent);
+    </script>
+
     <div id="service-text" class=""></div>
     <script>
       const LatestImageService = document.getElementById(
@@ -53,6 +100,122 @@
       setInterval(() => {
         socket.emit("getLatestImage");
       }, 5000);
+    </script>
+
+    <script>
+      // form post garbage
+      document
+        .getElementById("updateInterval")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          var interval = document.getElementById("interval").value;
+          var formData = new FormData();
+          formData.append("interval", interval);
+
+          fetch("/updateInterval", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => console.log(data))
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+
+      document
+        .getElementById("setKey")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          var API_KEY = document.getElementById("API_KEY").value;
+
+          fetch("/setKey", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({API_KEY: API_KEY}),
+          })
+            .then((response) => response.json())
+            .then((data) => console.log(data))
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+
+      document
+        .getElementById("checkKey")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          fetch("/checkKey", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({}),
+          })
+            .then((response) => response.json())
+            .then((data) => console.log(data))
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
+
+      document.getElementById("start").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        fetch("/start", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        })
+          .then((response) => response.json())
+          .then((data) => console.log(data))
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      });
+
+      document.getElementById("stop").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        fetch("/stop", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        })
+          .then((response) => response.json())
+          .then((data) => console.log(data))
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      });
+
+      document
+        .getElementById("status")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          fetch("/status", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({}),
+          })
+            .then((response) => response.json())
+            .then((data) => console.log(data))
+            .catch((error) => {
+              console.error("Error:", error);
+            });
+        });
     </script>
   </body>
 </html>
