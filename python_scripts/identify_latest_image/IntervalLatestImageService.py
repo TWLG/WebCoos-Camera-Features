@@ -73,14 +73,15 @@ class IntervalLatestImageService:
         if new_interval < 1:
             return self.get_return_head() + f"ERROR - Interval must be at least 1 minute"
 
-        prev_interval = self.interval
-        self.interval = new_interval
-
         if self.scheduler.get_job(self.job):
             self.scheduler.remove_job(self.job)
-
+            prev_interval = self.interval
+            self.interval = new_interval
             self.job = self.scheduler.add_job(
                 self.run, 'interval', minutes=self.interval)
+        else:
+            prev_interval = self.interval
+            self.interval = new_interval
         return self.get_return_head() + f"Interval updated from {prev_interval} to {self.interval} minutes."
 
     def start(self):
@@ -119,19 +120,20 @@ class IntervalLatestImageService:
         try:
             results = predict_image(self.app.config['WEBCOOS_API_KEY'])
             print(results)
+            self.socketIO.emit('interface_console',
+                               {'message': results})
             self.running = True
         except Exception as e:
+            self.socketIO.emit('interface_console',
+                               {'message': str(e)})
             self.app.logger.error(
                 self.get_return_head() + f"An error occurred: {str(e)}")
 
     def get_running_state(self):
-        """
-        Returns the current running state of the service.
-
-        Returns:
-            bool: True if the service is running, False otherwise.
-        """
-        return self.running
+        if self.running:
+            return "Service is running."
+        else:
+            return "Service is not running."
 
     def stop(self):
         """

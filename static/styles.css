@@ -1,11 +1,19 @@
-.circle {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+@font-face {
+  font-family: "Cascadia Mono";
+  src: url("CascadiaMono.woff2") format("woff2"),
+    url("CascadiaMono.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
 }
-.enabled {
-  background-color: green;
-}
-.disabled {
-  background-color: red;
+
+.console-log {
+  height: 400px;
+  width: 100%;
+  background-color: rgb(40, 42, 52);
+  color: rgb(220, 223, 228);
+  font-family: "Cascadia Mono", monospace;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding: 4px;
 }
