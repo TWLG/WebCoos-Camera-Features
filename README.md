@@ -1,5 +1,5 @@
 [![Run Python Tests](https://github.com/TWLG/WebCoos-Camera-Features/actions/workflows/tests.yml/badge.svg)](https://github.com/TWLG/WebCoos-Camera-Features/actions/workflows/tests.yml)
-
+[Wiki](https://github.com/TWLG/WebCoos-Camera-Features/wiki)
 <h1>Dev setup</h1>
 
 <p>Unless you want to set the key in the interface, create a .env with <b>WEBCOOS_API_KEY=""</b> for the server to utilize WebCoos API</p>
