@@ -21,7 +21,11 @@
   <body>
     <h1>WebCoos Model Server Console</h1>
     <p>There is likely a lot of bugs in this right now, use gently.</p>
-    <form id="updateInterval" action="/updateInterval" method="post">
+    <form
+      id="updateInterval"
+      action="/latestImageV1/updateInterval"
+      method="post"
+    >
       <label for="interval">Interval:</label><br />
       <input
         type="number"
@@ -33,23 +37,23 @@
       <input type="submit" value="Set Interval" />
     </form>
 
-    <form id="setKey" action="/setKey" method="post">
-      <label for="interval">Interval:</label><br />
+    <form id="setKey" action="setKey" method="post">
+      <label for="API_KEY">API_KEY:</label><br />
       <input type="text" id="API_KEY" name="API_KEY" required /><br />
       <input type="submit" value="Set API KEY" />
     </form>
 
-    <form id="checkKey" action="/checkKey" method="post">
+    <form id="checkKey" action="checkKey" method="post">
       <input type="submit" value="Check Key" />
     </form>
 
-    <form id="start" action="/start" method="post">
+    <form id="start" action="/latestImageV1/start" method="post">
       <input type="submit" value="Start" />
     </form>
-    <form id="stop" action="/stop" method="post">
+    <form id="stop" action="/latestImageV1/stop" method="post">
       <input type="submit" value="Stop" />
     </form>
-    <form id="status" action="/status" method="post">
+    <form id="status" action="/latestImageV1/status" method="post">
       <input type="submit" value="Check Running" />
     </form>
 
@@ -61,45 +65,18 @@
       function handleSocketEvent(data) {
         var consoleLog = document.getElementById("console-log");
         var newLog = document.createElement("div");
-        newLog.innerText = data.message;
+        // get current time in HH:MM:SS format
+        var time = new Date().toLocaleTimeString();
+        newLog.innerText = `[${time}] ` + data.message;
         consoleLog.appendChild(newLog);
         consoleLog.scrollTop = consoleLog.scrollHeight;
+
+        while (consoleLog.children.length > 150) {
+          consoleLog.removeChild(consoleLog.firstChild);
+        }
       }
 
       socket.on("interface_console", handleSocketEvent);
-    </script>
-
-    <div id="service-text" class=""></div>
-    <script>
-      const LatestImageService = document.getElementById(
-        "Latest-Image-Service"
-      );
-
-      function handleJobError(data) {
-        console.log("Job error: " + data.message);
-        LatestImageService.classList.add("disabled");
-        LatestImageService.classList.remove("enabled");
-        document.getElementById("service-text").innerHTML = data.message;
-      }
-
-      socket.on("IntervalLatestImageJobExecuted", function (data) {
-        console.log("Job executed: " + data.message);
-        LatestImageService.classList.add("enabled");
-        LatestImageService.classList.remove("disabled");
-        document.getElementById("service-text").innerHTML = data.message;
-      });
-
-      socket.on("IntervalLatestImageJobError", function (data) {
-        console.log("Job error: " + data.message);
-        LatestImageService.classList.add("disabled");
-        LatestImageService.classList.remove("enabled");
-        document.getElementById("service-text").innerHTML = data.message;
-      });
-
-      // Update the HTML every 5 seconds
-      setInterval(() => {
-        socket.emit("getLatestImage");
-      }, 5000);
     </script>
 
     <script>
@@ -113,7 +90,7 @@
           var formData = new FormData();
           formData.append("interval", interval);
 
-          fetch("/updateInterval", {
+          fetch("/latestImageV1/updateInterval", {
             method: "POST",
             body: formData,
           })
@@ -167,7 +144,7 @@
       document.getElementById("start").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        fetch("/start", {
+        fetch("/latestImageV1/start", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -184,7 +161,7 @@
       document.getElementById("stop").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        fetch("/stop", {
+        fetch("/latestImageV1/stop", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -203,7 +180,7 @@
         .addEventListener("submit", function (e) {
           e.preventDefault();
 
-          fetch("/status", {
+          fetch("/latestImageV1/status", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

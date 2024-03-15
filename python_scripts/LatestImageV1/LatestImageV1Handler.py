@@ -1,46 +1,20 @@
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
-from python_scripts.identify_latest_image.identify_latest_image import predict_image
-from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
+from python_scripts.LatestImageV1.LatestImageV1Model import LatestImageV1Model
 
 
-class IntervalLatestImageService:
+class LatestImageV1Handler:
     interval = 30
     running = False
 
     def __init__(self, app, scheduler: BackgroundScheduler, socketIO):
         self.scheduler = scheduler
-        self.jobName = "IntervalLatestImageJob"
+        self.name = "LatestImageV1"
         self.app = app
         self.job = None
-        self.API_KEY = app.config['WEBCOOS_API_KEY']
 
         self.socketIO = socketIO
-
-        def job_listener(event):
-            """
-            Listens for job events and emits corresponding messages through socketIO.
-
-            Args:
-                event: The job event.
-
-            Returns:
-                None
-            """
-            if event.exception:
-                self.app.logger.info(
-                    self.get_return_head() + f"Emitting error...")
-                self.socketIO.emit('IntervalLatestImageJobError', {
-                    'message': event.exception.message})
-            else:
-                self.app.logger.info(
-                    self.get_return_head() + f"Emitting success...")
-                current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.socketIO.emit('IntervalLatestImageJobExecuted',
-                                   {'message': current_time})
-
-        self.scheduler.add_listener(
-            job_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
+        self.model = LatestImageV1Model(self.app, self.socketIO)
 
     def get_return_head(self):
         """
@@ -49,12 +23,7 @@ class IntervalLatestImageService:
         Returns:
             str: A formatted string in the format '[current_time] (jobName): '
         """
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        return f"[{current_time}] ({self.jobName}): "
-
-    def refresh_key(self):
-        self.API_KEY = self.app.config['WEBCOOS_API_KEY']
-        return self.get_return_head() + f"API Key refreshed."
+        return f"({self.name}): "
 
     def update_interval(self, new_interval=30):
         """
@@ -82,6 +51,7 @@ class IntervalLatestImageService:
         else:
             prev_interval = self.interval
             self.interval = new_interval
+
         return self.get_return_head() + f"Interval updated from {prev_interval} to {self.interval} minutes."
 
     def start(self):
@@ -115,25 +85,35 @@ class IntervalLatestImageService:
         Returns:
             None
         """
-        self.app.logger.info(
-            self.get_return_head() + f"Running Job...")
+
         try:
-            results = predict_image(self.app.config['WEBCOOS_API_KEY'])
-            print(results)
             self.socketIO.emit('interface_console',
-                               {'message': results})
+                               {'message': self.get_return_head() + "Running LatestImageV1"})
+
+            data_request_result = self.model.request_latest_image()
+
+            self.socketIO.emit('interface_console',
+                               {'message': self.get_return_head() + data_request_result})
+
+            model_results = self.model.run_model()
+
+            self.socketIO.emit('interface_console',
+                               {'message': self.get_return_head() + str(model_results)})
+
             self.running = True
         except Exception as e:
             self.socketIO.emit('interface_console',
-                               {'message': str(e)})
+                               {'message': self.get_return_head() + str(e)})
             self.app.logger.error(
                 self.get_return_head() + f"An error occurred: {str(e)}")
+            self.running = False
+            self.stop()
 
     def get_running_state(self):
         if self.running:
-            return "Service is running."
+            return self.get_return_head() + "Service is running."
         else:
-            return "Service is not running."
+            return self.get_return_head() + "Service is not running."
 
     def stop(self):
         """
