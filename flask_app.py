@@ -1,3 +1,4 @@
+from blueprints.latest_image_v1_bp import latest_image_v1_bp
 from flask import Flask, render_template, request
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -6,41 +7,22 @@ from datetime import datetime
 from dotenv import load_dotenv
 import requests
 from flask_socketio import SocketIO
-from python_scripts.identify_latest_image.IntervalLatestImageService import IntervalLatestImageService
+from python_scripts.LatestImageV1.LatestImageV1Handler import LatestImageV1Handler
 
 app = Flask(__name__, template_folder='pages')
-scheduler = BackgroundScheduler()
-socketIO = SocketIO(app)
+app.register_blueprint(latest_image_v1_bp, url_prefix='/latestImageV1')
 
-# Set the API_KEY
+
 load_dotenv()
 app.config['WEBCOOS_API_KEY'] = os.getenv('WEBCOOS_API_KEY')
 
+
+socketIO = SocketIO(app)
+scheduler = BackgroundScheduler()
 scheduler.start()
 
-IntervalLatestImageService = IntervalLatestImageService(
-    app, scheduler, socketIO)
-
-
-@app.route('/updateInterval', methods=['POST'])
-def update_interval():
-    """
-    Updates the interval time for the latest image service.
-
-    This route expects a POST request with a form parameter 'interval' that specifies the new interval value.
-    The interval value should be a positive integer.
-
-    Returns:
-        The result of the IntervalLatestImageService.update_interval() method.
-    """
-    interval = request.form.get('interval')
-    if interval is None:
-        # Provide a default value or handle the error appropriately
-        interval = '30'
-    result = IntervalLatestImageService.update_interval(int(interval))
-    socketIO.emit('interface_console', {'message': result}, namespace='/')
-
-    return result
+# Load Blueprints
+app.config['Latest_Image_V1'] = LatestImageV1Handler(app, scheduler, socketIO)
 
 
 @app.route('/setKey', methods=['POST'])
@@ -68,7 +50,7 @@ def set_key():
             with open('.env', 'w') as f:
                 f.write(f'WEBCOOS_API_KEY={API_KEY}')
 
-        IntervalLatestImageService.refresh_key()
+        load_dotenv()
         socketIO.emit('interface_console', {
                       'message': 'API key set.'}, namespace='/')
         return 'API key set.'
@@ -82,6 +64,7 @@ def check_key():
     Returns:
         str: A message indicating whether the API key is valid or invalid.
     """
+    load_dotenv()
     user_info_url = 'https://app.webcoos.org/u/api/me/'
     headers = {'Authorization': f'Token {
         app.config['WEBCOOS_API_KEY']}', 'Accept': 'application/json'}
@@ -97,43 +80,6 @@ def check_key():
                       'message': 'Invalid API key.'}, namespace='/')
         app.logger.warning('Invalid API key.')
         return 'Invalid API key.'
-
-
-@app.route('/start', methods=['POST'])
-def start():
-    """
-    This function is a route handler for the '/start' endpoint.
-    It is triggered when a POST request is made to the '/start' endpoint.
-    The result of the IntervalLatestImageService.start() method.    """
-    result = IntervalLatestImageService.start()
-    socketIO.emit('interface_console', {
-        'message': result}, namespace='/')
-    return result
-
-
-@app.route('/stop', methods=['POST'])
-def stop():
-    """
-    Stops the IntervalLatestImageService.
-
-    Returns:
-        The result of the IntervalLatestImageService.stop() method.
-    """
-    result = IntervalLatestImageService.stop()
-    socketIO.emit('interface_console', {
-        'message': result}, namespace='/')
-    return result
-
-
-@app.route('/status', methods=['POST'])
-def status():
-    """
-    Returns the running state of the IntervalLatestImageService.
-    """
-    result = IntervalLatestImageService.get_running_state()
-    socketIO.emit('interface_console', {
-        'message': result}, namespace='/')
-    return result
 
 
 @app.route('/')
