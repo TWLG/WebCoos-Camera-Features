@@ -1,31 +1,39 @@
 import unittest
-import flask_app
-from unittest.mock import patch
+from flask import Flask
+from blueprints.latest_image_v1_bp import latest_image_v1_bp
 
 
-class TestFlaskApp(unittest.TestCase):
+class TestLatestImageRoutes(unittest.TestCase):
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.app.register_blueprint(latest_image_v1_bp)
+        self.client = self.app.test_client()
 
-    @patch('flask_app.requests.get')
-    def test_check_key(self, mock_get):
-        # Mocking the response from requests.get
-        mock_get.return_value.status_code = 200
+    def test_update_interval_route(self):
+        response = self.client.post('/latestImageV1/updateInterval')
+        self.assertEqual(response.status_code, 200)
 
-        # Call the function
-        result = flask_app.check_key()
+    def test_start_route(self):
+        response = self.client.post('/latestImageV1/start')
+        self.assertEqual(response.status_code, 200)
 
-        # Assert that the function returned 'Valid API key.'
-        self.assertEqual(result, 'Valid API key.')
+    def test_stop_route(self):
+        response = self.client.post('/latestImageV1/stop')
+        self.assertEqual(response.status_code, 200)
 
-    @patch('flask_app.predict_image')
-    def test_run_filter_model(self, mock_predict_image):
-        # Mocking the response from predict_image
-        mock_predict_image.return_value = 'Mocked result'
+    def test_status_route(self):
+        response = self.client.post('/latestImageV1/status')
+        self.assertEqual(response.status_code, 200)
 
-        # Call the function
-        flask_app.run_filter_model()
 
-        # Assert that predict_image was called with the correct argument
-        mock_predict_image.assert_called_once_with(flask_app.API_KEY)
+class TestLatestImageInterface(unittest.TestCase):
+    def setUp(self):
+        self.app = Flask(__name__)
+        self.client = self.app.test_client()
+
+    def test_index_page_loads(self):
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == '__main__':
