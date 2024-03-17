@@ -2,8 +2,6 @@ from blueprints.latest_image_v1_bp import latest_image_v1_bp
 from flask import Flask, render_template, request
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
-from datetime import datetime
 from dotenv import load_dotenv
 import requests
 from flask_socketio import SocketIO
@@ -69,7 +67,7 @@ def check_key():
     headers = {'Authorization': f'Token {
         app.config['WEBCOOS_API_KEY']}', 'Accept': 'application/json'}
     response_user = requests.get(user_info_url, headers=headers)
-    print(response_user.status_code, "asdasdasd")
+
     if response_user.status_code == 200:
         app.logger.info('Valid API key.')
         socketIO.emit('interface_console', {
@@ -88,5 +86,5 @@ def home():
 
 
 if __name__ == '__main__':
-    app.debug = True
+
     socketIO.run(app)

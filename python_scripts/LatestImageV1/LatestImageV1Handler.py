@@ -1,4 +1,3 @@
-from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from python_scripts.LatestImageV1.LatestImageV1Model import LatestImageV1Model
 
@@ -6,6 +5,7 @@ from python_scripts.LatestImageV1.LatestImageV1Model import LatestImageV1Model
 class LatestImageV1Handler:
     interval = 30
     running = False
+    latest_image = None
 
     def __init__(self, app, scheduler: BackgroundScheduler, socketIO):
         self.scheduler = scheduler
@@ -92,13 +92,25 @@ class LatestImageV1Handler:
 
             data_request_result = self.model.request_latest_image()
 
-            self.socketIO.emit('interface_console',
-                               {'message': self.get_return_head() + data_request_result})
+            latest = self.model.get_current_latest_image_url()
 
-            model_results = self.model.run_model()
+            if latest == self.latest_image:
+                self.socketIO.emit('interface_console',
+                                   {'message': self.get_return_head() + "No new image. Run skipped."})
+            else:
+                self.latest_image = latest
+                self.socketIO.emit('interface_console',
+                                   {'message': self.get_return_head() + data_request_result})
 
-            self.socketIO.emit('interface_console',
-                               {'message': self.get_return_head() + str(model_results)})
+                model_results = self.model.run_model()
+
+                self.socketIO.emit('interface_console',
+                                   {'message': self.get_return_head() + str(model_results)})
+
+                save_results = self.model.save_results()
+
+                self.socketIO.emit('interface_console',
+                                   {'message': self.get_return_head() + save_results})
 
             self.running = True
         except Exception as e:

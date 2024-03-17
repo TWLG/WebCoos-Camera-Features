@@ -1,5 +1,6 @@
 collected_data/
 .env
+training_split_output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
