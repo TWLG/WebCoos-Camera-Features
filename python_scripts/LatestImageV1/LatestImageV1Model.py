@@ -74,18 +74,17 @@ class LatestImageV1Model:
 
             # Get the latest image data
             response = requests.get(self.current_latest_image_url)
-            content_disposition = response.headers.get('Content-Disposition')
-            if content_disposition:
-                filename = re.findall('filename=(.+)', content_disposition)[0]
-            else:
-                filename = 'default.jpg'  # Default filename if no Content-Disposition header
+
+            print(self.current_latest_image_url)
+            # get the image name out of the url
+            filename = os.path.basename(self.current_latest_image_url)
 
             self.latest_image_data = Image.open(BytesIO(response.content))
             self.latest_image_filename = filename
 
             return "Latest image received: " + self.current_latest_image_url
         except Exception as e:
-            raise Exception(e)
+            raise Exception("Error request_latest_image: " + str(e))
 
     def run_model(self):
         """
@@ -124,11 +123,50 @@ class LatestImageV1Model:
 
     def save_results(self):
         """
-        Saves the latest image and its results.
+        Save the results of the latest image analysis.
+
+        This method saves the results of the latest image analysis to the appropriate directory.
+        It creates a directory for each result with a probability greater than or equal to 0.5,
+        saves the image in the directory, and appends the file name, class name, and probability
+        to a CSV file.
 
         Returns:
-            None
+            str: The path where the results are saved.
+
+        Raises:
+            Exception: If an error occurs while saving the results.
         """
-        save_path = os.path.join(
-            'collected_data', 'LatestImageV1', self.latest_image_filename)
-        self.latest_image_data.save(save_path)
+        try:
+            # Get the directory of the current script
+            script_dir = os.path.dirname(os.path.realpath(__file__))
+
+            if self.latest_image_results:
+                for result in self.latest_image_results:
+                    if result[2] >= 0.5:
+
+                        # Define the directory where the results will be saved
+                        save_dir = os.path.join(
+                            script_dir, '..', '..', 'collected_data', 'unreviewed', 'LatestImageV1', result[1])
+
+                        # Ensure the directory exists
+                        os.makedirs(save_dir, exist_ok=True)
+
+                        # Define the path where the image will be saved
+                        save_path = os.path.join(
+                            save_dir, self.latest_image_filename)
+
+                        # Save the image
+                        self.latest_image_data.save(save_path)
+
+                        # append the file name, class name, and probability to a csv file
+                        with open(os.path.join(save_dir, '..', 'results.csv'), 'a') as file:
+                            file.write(f"{self.latest_image_filename},{
+                                result[1]},{result[2]}\n")
+
+                return "Results saved to " + os.path.join(
+                    script_dir, '..', '..', 'collected_data', 'unreviewed', 'LatestImageV1')
+        except Exception as e:
+            raise Exception("Error save_results: " + str(e))
+
+    def get_current_latest_image_url(self):
+        return self.current_latest_image_url

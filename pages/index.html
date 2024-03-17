@@ -57,6 +57,10 @@
       <input type="submit" value="Check Running" />
     </form>
 
+    <form id="clearConsole">
+      <input type="submit" value="clearConsole" />
+    </form>
+
     <div id="console-log" name="console-log" class="console-log">
       <div>WebCoos Model Interface Log</div>
     </div>
@@ -77,10 +81,24 @@
       }
 
       socket.on("interface_console", handleSocketEvent);
+
+      document
+        .getElementById("clearConsole")
+        .addEventListener("click", function (e) {
+          e.preventDefault(); // Prevent the default form submit action if it's a form button
+
+          var consoleLog = document.getElementById("console-log");
+          consoleLog.innerHTML = ""; // Clear the console log content directly
+
+          var newLog = document.createElement("div");
+          newLog.innerText = `WebCoos Model Interface Log`;
+          consoleLog.appendChild(newLog); // Append the new initial log message
+        });
     </script>
 
     <script>
       // form post garbage
+
       document
         .getElementById("updateInterval")
         .addEventListener("submit", function (e) {
