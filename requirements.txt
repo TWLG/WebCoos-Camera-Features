@@ -1,10 +1,15 @@
-flask
-apscheduler
-ultralytics
-pillow
 python-dotenv
+
+flask
 flask-socketio
-scikit-learn
+gunicorn
+
+apscheduler
+
+pillow
+
 torch 
 torchvision
 torchaudio --index-url https://download.pytorch.org/whl/cu121
+ultralytics
+scikit-learn

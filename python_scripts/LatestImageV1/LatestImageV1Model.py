@@ -1,5 +1,4 @@
 # WebCOOS API Python Request
-import re
 from ultralytics import YOLO
 from PIL import Image
 from io import BytesIO
