@@ -2,9 +2,10 @@ python-dotenv
 
 flask
 flask-socketio
-gunicorn
-
 apscheduler
+
+gunicorn
+eventlet
 
 pillow
 
