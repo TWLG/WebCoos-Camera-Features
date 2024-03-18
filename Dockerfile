@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y libgl1-mesa-glx
 # Set the working directory in the container to /app
 WORKDIR /app
 
-# Add the current directory contents into the container at /app
+# Add the current directory contents into container at /app
 ADD . /app
 
 COPY python_scripts/ /app/python_scripts/
