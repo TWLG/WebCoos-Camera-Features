@@ -1,0 +1,8 @@
+.github
+__pycache__
+Models
+tests
+collected_data
+README.md
+LICENSE
+.env

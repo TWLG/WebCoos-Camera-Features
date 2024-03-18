@@ -86,5 +86,4 @@ def home():
 
 
 if __name__ == '__main__':
-
     socketIO.run(app)
