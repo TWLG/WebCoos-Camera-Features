@@ -1,11 +1,13 @@
-from blueprints.latest_image_v1_bp import latest_image_v1_bp
+# flask_app.py
 from flask import Flask, render_template, request
 import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 import requests
 from flask_socketio import SocketIO
-from python_scripts.LatestImageV1.LatestImageV1Handler import LatestImageV1Handler
+from celery import Celery
+from celery.schedules import crontab
+
 
 app = Flask(__name__, template_folder='pages')
 app.register_blueprint(latest_image_v1_bp, url_prefix='/latestImageV1')
@@ -16,38 +18,34 @@ app.config['WEBCOOS_API_KEY'] = os.getenv('WEBCOOS_API_KEY')
 
 
 socketIO = SocketIO(app)
-scheduler = BackgroundScheduler()
-scheduler.start()
+
+# Celery configuration
+app.config.from_object('celery_config')
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
 
 # Load Blueprints
 app.config['Latest_Image_V1'] = LatestImageV1Handler(app, scheduler, socketIO)
+
+# Schedule the classification task
+celery.conf.beat_schedule = {
+    'run_classification_task': {
+        'task': 'tasks.run_classification_task',
+        'schedule': crontab(minute='*/30'),  # Run every 30 minutes
+        'args': (app, socketIO),
+    },
+}
 
 
 @app.route('/setKey', methods=['POST'])
 def set_key():
     """
     Sets the WEBCOOS_API_KEY in the application configuration in the .env, created the file if needed.
-
-    Returns:
-        str: A message indicating that the API key has been set.
     """
     API_KEY = request.form.get('API_KEY', type=str)
     if API_KEY:
         app.config['WEBCOOS_API_KEY'] = API_KEY
-        # check if the file exists
-        if os.path.exists('.env'):
-            with open('.env', 'a') as f:
-                # if the WEBCOOS_API_KEY is already in the file, replace it
-                if 'WEBCOOS_API_KEY' in f.read():
-                    f.seek(0)
-                    f.truncate()
-                    f.write(f'WEBCOOS_API_KEY={API_KEY}')
-                else:
-                    f.write(f'\nWEBCOOS_API_KEY={API_KEY}')
-        else:
-            with open('.env', 'w') as f:
-                f.write(f'WEBCOOS_API_KEY={API_KEY}')
-
+        set_key('.env', 'WEBCOOS_API_KEY', API_KEY)
         load_dotenv()
         socketIO.emit('interface_console', {
                       'message': 'API key set.'}, namespace='/')
