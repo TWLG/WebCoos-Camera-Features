@@ -66,12 +66,12 @@
     </div>
 
     <script>
-      function handleSocketEvent(data) {
+      function addToConsole(data) {
         var consoleLog = document.getElementById("console-log");
         var newLog = document.createElement("div");
         // get current time in HH:MM:SS format
         var time = new Date().toLocaleTimeString();
-        newLog.innerText = `[${time}] ` + data.message;
+        newLog.innerText = `[${time}] ` + data;
         consoleLog.appendChild(newLog);
         consoleLog.scrollTop = consoleLog.scrollHeight;
 
@@ -80,7 +80,7 @@
         }
       }
 
-      socket.on("interface_console", handleSocketEvent);
+      socket.on("interface_console", addToConsole);
 
       document
         .getElementById("clearConsole")
@@ -113,7 +113,10 @@
             body: formData,
           })
             .then((response) => response.json())
-            .then((data) => console.log(data))
+            .then((data) => {
+              console.log(data);
+              addToConsole(data.message);
+            })
             .catch((error) => {
               console.error("Error:", error);
             });
@@ -134,7 +137,10 @@
             body: JSON.stringify({API_KEY: API_KEY}),
           })
             .then((response) => response.json())
-            .then((data) => console.log(data))
+            .then((data) => {
+              console.log(data);
+              addToConsole(data.message);
+            })
             .catch((error) => {
               console.error("Error:", error);
             });
@@ -153,9 +159,13 @@
             body: JSON.stringify({}),
           })
             .then((response) => response.json())
-            .then((data) => console.log(data))
+            .then((data) => {
+              console.log(data);
+              addToConsole(data.message);
+            })
             .catch((error) => {
               console.error("Error:", error);
+              addToConsole({message: "Error: " + error});
             });
         });
 
@@ -170,7 +180,10 @@
           body: JSON.stringify({}),
         })
           .then((response) => response.json())
-          .then((data) => console.log(data))
+          .then((data) => {
+            console.log(data);
+            addToConsole(data.message);
+          })
           .catch((error) => {
             console.error("Error:", error);
           });
@@ -187,7 +200,10 @@
           body: JSON.stringify({}),
         })
           .then((response) => response.json())
-          .then((data) => console.log(data))
+          .then((data) => {
+            console.log(data);
+            addToConsole(data.message);
+          })
           .catch((error) => {
             console.error("Error:", error);
           });
@@ -206,7 +222,10 @@
             body: JSON.stringify({}),
           })
             .then((response) => response.json())
-            .then((data) => console.log(data))
+            .then((data) => {
+              console.log(data);
+              addToConsole(data.message);
+            })
             .catch((error) => {
               console.error("Error:", error);
             });

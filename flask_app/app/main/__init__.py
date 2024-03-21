@@ -1,4 +1,4 @@
-from flask import render_template, request, Blueprint, current_app
+from flask import jsonify, render_template, request, Blueprint, current_app
 from flask_socketio import send
 from dotenv import load_dotenv, set_key
 import requests
@@ -9,7 +9,6 @@ main = Blueprint('main', __name__)
 
 @main.route('/')
 def home():
-    current_app.logger.info('Test.')
     return render_template('index.html')
 
 
@@ -43,12 +42,11 @@ def check_key():
 
         if response_user.status_code == 200:
             current_app.logger.info('Valid API key.')
-            send('Valid API key.', namespace='/')
-            return 'Valid API key.'
+            return jsonify({'status': 'success', 'message': 'API key is valid.'}), 200
         else:
 
             current_app.logger.warning('Invalid API key.')
-            return 'Invalid API key.'
+            return jsonify({'status': 'error', 'message': 'API key is invalid.'}), 400
     except Exception as e:
         current_app.logger.error(e)
         return str(e)

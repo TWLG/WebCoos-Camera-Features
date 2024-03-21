@@ -19,8 +19,8 @@ def create_app(debug=False):
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
-    from .LatestImageV1_bp import LatestImageV1_bp
-    app.register_blueprint(LatestImageV1_bp)
+    from .LatestImageV1 import LatestImageV1
+    app.register_blueprint(LatestImageV1, url_prefix='/latestImageV1')
 
     socketio.init_app(app)
     return app
