@@ -23,7 +23,7 @@
     <p>There is likely a lot of bugs in this right now, use gently.</p>
     <form
       id="updateInterval"
-      action="/latestImageV1/updateInterval"
+      action="/SeaClassificationV1/updateInterval"
       method="post"
     >
       <label for="interval">Interval:</label><br />
@@ -47,13 +47,13 @@
       <input type="submit" value="Check Key" />
     </form>
 
-    <form id="start" action="/latestImageV1/start" method="post">
+    <form id="start" action="/SeaClassificationV1/start" method="post">
       <input type="submit" value="Start" />
     </form>
-    <form id="stop" action="/latestImageV1/stop" method="post">
+    <form id="stop" action="/SeaClassificationV1/stop" method="post">
       <input type="submit" value="Stop" />
     </form>
-    <form id="status" action="/latestImageV1/status" method="post">
+    <form id="status" action="/SeaClassificationV1/status" method="post">
       <input type="submit" value="Check Running" />
     </form>
 
@@ -108,7 +108,7 @@
           var formData = new FormData();
           formData.append("interval", interval);
 
-          fetch("/latestImageV1/updateInterval", {
+          fetch("/SeaClassificationV1/updateInterval", {
             method: "POST",
             body: formData,
           })
@@ -172,7 +172,7 @@
       document.getElementById("start").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        fetch("/latestImageV1/start", {
+        fetch("/SeaClassificationV1/start", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -192,7 +192,7 @@
       document.getElementById("stop").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        fetch("/latestImageV1/stop", {
+        fetch("/SeaClassificationV1/stop", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -214,7 +214,7 @@
         .addEventListener("submit", function (e) {
           e.preventDefault();
 
-          fetch("/latestImageV1/status", {
+          fetch("/SeaClassificationV1/status", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

@@ -12,15 +12,16 @@ def create_app(debug=False):
 
     load_dotenv()
     app.config['WEBCOOS_API_KEY'] = os.getenv('WEBCOOS_API_KEY')
-    if not os.getenv('LATEST_IMAGE_V1_INTERVAL'):
-        set_key('.env', 'LATEST_IMAGE_V1_INTERVAL', '30')
-    app.config['LATEST_IMAGE_V1_INTERVAL'] = os.getenv(
-        'LATEST_IMAGE_V1_INTERVAL')
+    if not os.getenv('SEA_CLASSIFICATION_V1_INTERVAL'):
+        set_key('.env', 'SEA_CLASSIFICATION_V1_INTERVAL', '30')
+    app.config['SEA_CLASSIFICATION_V1_INTERVAL'] = os.getenv(
+        'SEA_CLASSIFICATION_V1_INTERVAL')
 
-    from .main import main as main_blueprint
+    from .blueprints.main import main as main_blueprint
     app.register_blueprint(main_blueprint)
-    from .LatestImageV1 import LatestImageV1
-    app.register_blueprint(LatestImageV1, url_prefix='/latestImageV1')
+    from .blueprints.SeaClassificationV1 import SeaClassificationV1
+    app.register_blueprint(SeaClassificationV1,
+                           url_prefix='/SeaClassificationV1')
 
     socketio.init_app(app)
     return app
