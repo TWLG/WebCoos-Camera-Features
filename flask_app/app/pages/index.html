@@ -128,13 +128,12 @@
           e.preventDefault();
 
           var API_KEY = document.getElementById("API_KEY").value;
+          var formData = new FormData();
+          formData.append("API_KEY", API_KEY);
 
           fetch("/setKey", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({API_KEY: API_KEY}),
+            body: formData,
           })
             .then((response) => response.json())
             .then((data) => {

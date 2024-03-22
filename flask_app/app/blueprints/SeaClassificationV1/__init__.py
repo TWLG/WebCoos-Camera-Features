@@ -24,7 +24,7 @@ def update_interval():
 
     set_key('.env', 'SEA_CLASSIFICATION_V1_INTERVAL', str(new_interval))
 
-    load_dotenv()  # load variables from .env
+    load_dotenv(override=True)  # load variables from .env
 
     try:
         job = scheduler.get_job('SCV1_run_latest_image')
@@ -42,7 +42,7 @@ def update_interval():
 def start():
     try:
         job = scheduler.get_job('SCV1_run_latest_image')
-        load_dotenv()
+        load_dotenv(override=True)
         interval = os.getenv('SEA_CLASSIFICATION_V1_INTERVAL')
         # check if interval is int
         try:
