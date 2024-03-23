@@ -113,7 +113,7 @@ class SeaConditionsV1:
 
                             # Define the directory where the results will be saved
                             save_dir = os.path.join(
-                                script_dir, '..', '..', '..', '..', 'collected_data', 'unreviewed', 'SeaConditionsV1', result[1])
+                                script_dir, '..', '..', '..',  'collected_data', 'unreviewed', 'SeaConditionsV1', result[1])
 
                             # Ensure the directory exists
                             os.makedirs(save_dir, exist_ok=True)
