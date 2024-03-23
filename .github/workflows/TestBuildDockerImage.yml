@@ -1,9 +1,10 @@
-name: Build and Push Docker Image to Docker Hub
+name: Build Docker Image
 
 on:
   push:
-    branches:
+    branches-ignore:
       - main
+
 jobs:
   push_to_registry:
     name: Push Docker Image to Docker Hub
@@ -22,5 +23,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
+          push: false
           tags: twlggles/webcooscamerafeatures:latest
