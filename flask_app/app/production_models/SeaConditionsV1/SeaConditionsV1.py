@@ -7,7 +7,7 @@ from ultralytics import YOLO
 
 
 class SeaConditionsV1:
-    last_image = None
+    last_image = ''
 
     def run_model(self, image_data):
         """
@@ -128,4 +128,5 @@ class SeaConditionsV1:
             except Exception as e:
                 return "Error save_results: " + str(e)
         else:
+            self.last_image = filename
             return "No new image to process."
