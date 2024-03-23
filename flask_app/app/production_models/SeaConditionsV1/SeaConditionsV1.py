@@ -100,17 +100,23 @@ class SeaConditionsV1:
 
             try:
                 os.makedirs(results_dir, exist_ok=True)
-                save_path = os.path.join(results_dir, filename)
-                latest_image.save(save_path)
 
                 if not os.path.exists(results_csv):
                     with open(results_csv, 'w') as file:
                         file.write("Filename,Class,Probability\n")
 
-                with open(results_csv, 'a') as file:
-                    for result in results:
-                        if result[2] >= 0.5:
+                for result in results:
+
+                    if result[2] >= 0.5:
+                        class_dir = os.path.join(results_dir, result[1])
+                        os.makedirs(class_dir, exist_ok=True)
+                        save_path = os.path.join(class_dir, filename)
+                        with open(results_csv, 'a') as file:
                             file.write(f"{filename},{result[1]},{result[2]}\n")
+                        try:
+                            latest_image.save(save_path)
+                        except Exception as e:
+                            print(f"Error saving the image: {e}")
 
                 return f"Results saved to {results_dir}"
             except Exception as e:
