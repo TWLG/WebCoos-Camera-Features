@@ -48,7 +48,7 @@ class SeaConditionsV1:
         Retrieves the latest image from a specified URL, processes it using a model, and saves the results.
 
         Returns:
-            str: A message indicating the directory where the results are saved.
+            str: A message indicating the directory where the results are saved or an error message.
 
         Raises:
             Exception: If there is an error retrieving the latest image or running the model.
@@ -56,85 +56,66 @@ class SeaConditionsV1:
         load_dotenv()
 
         target_url = 'https://app.webcoos.org/webcoos/api/v1/assets/masonboro_inlet/elements/latest/image/'
-
         header = {'Authorization': f'Token {
             os.getenv("WEBCOOS_API_KEY")}', 'Accept': 'application/json'}
+
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        results_dir = os.path.join(
+            script_dir, '..', '..', '..', 'collected_data', 'unreviewed', 'SeaConditionsV1')
+        results_csv = os.path.join(results_dir, 'results.csv')
+
         try:
             # Get the latest image URL
             response = requests.get(target_url, headers=header)
+            response.raise_for_status()
+            latest_image_url = response.json()['data']['properties']['url']
+        except (requests.exceptions.RequestException, KeyError, ValueError) as e:
+            return f"Error retrieving the latest image: {e}"
 
-            latest_image_url = None
-            if response.status_code == 200:
-                data = response.json()
-                latest_image_url = data['data']['properties']['url']
-            else:
-                return "Error: " + str(response.status_code)
-
+        try:
             # Get the latest image data
             response = requests.get(latest_image_url)
-
-            # get the image name out of the url
-            filename = os.path.basename(latest_image_url)
-
-            # get local dir
-            local_dir = os.path.join(os.path.dirname(os.path.realpath(
-                __file__)), '..', '..', 'collected_data', 'unreviewed', 'SeaConditionsV1')
-            # get the last result in column 1 in the csv file
-            with open(os.path.join(local_dir, 'results.csv'), 'r') as file:
-                last_image = file.readlines()[-1].split(',')[0]
-
+            response.raise_for_status()
             latest_image = Image.open(BytesIO(response.content))
+            filename = os.path.basename(latest_image_url)
+        except (requests.exceptions.RequestException, IOError) as e:
+            return f"Error retrieving or opening the image: {e}"
 
-            print("Latest image received: " + latest_image_url)
-
-        except Exception as e:
-            return "Error request_latest_image: " + str(e)
+        # Check if the image is new
+        try:
+            with open(results_csv, 'r') as file:
+                last_image = file.readlines()[-1].split(',')[0]
+        except (IndexError, FileNotFoundError):
+            last_image = None
 
         if last_image != filename:
-            print("=====================================")
-            print(self.last_image, filename)
-            print("=====================================")
+            print(f"New image received: {latest_image_url}")
+
             try:
                 print("Running SeaConditionsV1 on latest image...")
-
                 results = self.run_model(latest_image)
-
                 print("Done.")
             except Exception as e:
-                return "Error run_model: " + str(e)
+                return f"Error running the model: {e}"
 
             try:
-                # Get the directory of the current script
-                script_dir = os.path.dirname(os.path.realpath(__file__))
+                os.makedirs(results_dir, exist_ok=True)
+                save_path = os.path.join(results_dir, filename)
+                latest_image.save(save_path)
 
-                if results:
+                if not os.path.exists(results_csv):
+                    with open(results_csv, 'w') as file:
+                        file.write("Filename,Class,Probability\n")
+
+                with open(results_csv, 'a') as file:
                     for result in results:
                         if result[2] >= 0.5:
+                            file.write(f"{filename},{result[1]},{result[2]}\n")
 
-                            # Define the directory where the results will be saved
-                            save_dir = os.path.join(
-                                script_dir, '..', '..', '..',  'collected_data', 'unreviewed', 'SeaConditionsV1', result[1])
-
-                            # Ensure the directory exists
-                            os.makedirs(save_dir, exist_ok=True)
-
-                            # Define the path where the image will be saved
-                            save_path = os.path.join(
-                                save_dir, filename)
-
-                            # Save the image
-                            latest_image.save(save_path)
-
-                            # append the file name, class name, and probability to a csv file
-                            with open(os.path.join(save_dir, '..', 'results.csv'), 'a') as file:
-                                file.write(f"{filename},{
-                                           result[1]},{result[2]}\n")
-                    print("Results saved to " + os.path.join(
-                        script_dir, '..', '..', 'collected_data', 'unreviewed', 'SeaConditionsV1'))
-                    return "Results saved to " + os.path.join(
-                        script_dir, '..', '..', 'collected_data', 'unreviewed', 'SeaConditionsV1')
+                return f"Results saved to {results_dir}"
             except Exception as e:
-                return "Error save_results: " + str(e)
+                return f"Error saving the results: {e}"
         else:
-            self.last_image = filename
+            print(f"No new image to process. Last processed image: {
+                  last_image}")
             return "No new image to process."
