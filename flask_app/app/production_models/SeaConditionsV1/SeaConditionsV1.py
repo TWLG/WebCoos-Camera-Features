@@ -23,7 +23,6 @@ class SeaConditionsV1:
             Exception: If an error occurs during the model prediction.
         """
         try:
-
             script_dir = os.path.dirname(os.path.realpath(__file__))
             file_path = os.path.join(script_dir, "BroadFilterV1.pt")
 
@@ -41,7 +40,6 @@ class SeaConditionsV1:
 
                 # Sort the list in descending order of probability
                 class_probs.sort(key=lambda x: x[2], reverse=True)
-
             return class_probs
         except Exception as e:
             print("Error: " + str(e))
@@ -90,7 +88,9 @@ class SeaConditionsV1:
         if self.last_image != filename:
             try:
                 print("Running SeaConditionsV1 on latest image...")
+
                 results = self.run_model(latest_image)
+
                 print("Done.")
             except Exception as e:
                 return "Error run_model: " + str(e)

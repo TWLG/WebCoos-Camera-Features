@@ -1,10 +1,10 @@
 import os
-from time import sleep
 from flask import jsonify, render_template, request, Blueprint, current_app
-from flask_socketio import send
 from dotenv import load_dotenv, set_key
 import requests
 from flask import Blueprint
+
+from ... import socketio
 
 main = Blueprint('main', __name__)
 
@@ -19,6 +19,9 @@ def set_webcoos_key():
     """
     Sets the WEBCOOS_API_KEY in the application configuration in the .env, created the file if needed.
     """
+    socketio.emit('interface_console', {
+        'message': 'Setting new key...'}, namespace='/')
+
     API_KEY = request.form.get('API_KEY')
 
     if API_KEY:
@@ -37,7 +40,10 @@ def check_key():
     Returns:
         str: A message indicating whether the API key is valid or invalid.
     """
+    socketio.emit('interface_console', {
+        'message': 'Checking key...'}, namespace='/')
     try:
+
         load_dotenv(override=True)
         API_KEY = os.getenv('WEBCOOS_API_KEY')
 

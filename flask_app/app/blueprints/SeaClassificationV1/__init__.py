@@ -5,7 +5,7 @@ from app.production_models import SeaConditionsV1
 
 
 from app.utils import scheduler
-
+from ... import socketio
 
 SeaClassificationV1 = Blueprint('SeaClassificationV1', __name__)
 
@@ -14,6 +14,8 @@ SeaClassificationV1 = Blueprint('SeaClassificationV1', __name__)
 
 @SeaClassificationV1.route('/updateInterval', methods=['POST'])
 def update_interval():
+    socketio.emit('interface_console', {
+        'message': 'Updating interval...'}, namespace='/')
     # Get the new interval from the request
     new_interval = request.form.get('interval')
     # check if numerical integer
@@ -88,7 +90,7 @@ def status():
     job = scheduler.get_job('SCV1_run_latest_image')
 
     if job is None:
-        return jsonify({'status': 'error', 'message': "Job does not exist."}), 400
+        return jsonify({'status': 'error', 'message': "Job does not exist."}), 200
     else:
         if job.next_run_time is None:
             return jsonify({'status': 'success', 'message': "Job is paused."}), 200

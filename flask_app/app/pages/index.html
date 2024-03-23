@@ -80,7 +80,35 @@
         }
       }
 
-      socket.on("interface_console", addToConsole);
+      function handleSocketEvent(data) {
+        var consoleLog = document.getElementById("console-log");
+        var newLog = document.createElement("div");
+        // get current time in HH:MM:SS format
+        var time = new Date().toLocaleTimeString();
+        newLog.innerText = `[${time}] ` + data.message;
+        consoleLog.appendChild(newLog);
+        consoleLog.scrollTop = consoleLog.scrollHeight;
+
+        while (consoleLog.children.length > 150) {
+          consoleLog.removeChild(consoleLog.firstChild);
+        }
+      }
+
+      var socket;
+      document.addEventListener("DOMContentLoaded", function () {
+        socket = io.connect(
+          "http://" + document.domain + ":" + location.port + "/"
+        );
+        socket.on("connect", function () {
+          console.log("Connected.");
+          addToConsole("Connected.");
+        });
+        socket.on("disconnect", function () {
+          console.log("Connection lost.");
+          addToConsole("Connection lost.");
+        });
+      });
+      socket.on("interface_console", handleSocketEvent);
 
       document
         .getElementById("clearConsole")
