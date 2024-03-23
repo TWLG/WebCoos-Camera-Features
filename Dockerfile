@@ -8,15 +8,14 @@ RUN apt-get update && apt-get install -y libgl1-mesa-glx
 WORKDIR /app
 
 # Add the current directory contents into container at /app
-ADD . /app
-
-COPY python_scripts/ /app/python_scripts/
-
+ADD flask_app /app
+ADD requirements.txt /app
+RUN ls /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
 
 # Run flask_app.py when the container launches
-CMD ["gunicorn", "-k", "eventlet", "-w", "2", "-b", "0.0.0.0:5000", "flask_app:app"]
+CMD ["gunicorn", "-k", "eventlet", "-w", "2", "-b", "0.0.0.0:5000", "run_app:app"]
 
 #docker run --env-file=.env your_image_name

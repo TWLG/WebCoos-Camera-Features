@@ -23,7 +23,7 @@
     <p>There is likely a lot of bugs in this right now, use gently.</p>
     <form
       id="updateInterval"
-      action="/latestImageV1/updateInterval"
+      action="/SeaClassificationV1/updateInterval"
       method="post"
     >
       <label for="interval">Interval:</label><br />
@@ -47,13 +47,13 @@
       <input type="submit" value="Check Key" />
     </form>
 
-    <form id="start" action="/latestImageV1/start" method="post">
+    <form id="start" action="/SeaClassificationV1/start" method="post">
       <input type="submit" value="Start" />
     </form>
-    <form id="stop" action="/latestImageV1/stop" method="post">
+    <form id="stop" action="/SeaClassificationV1/stop" method="post">
       <input type="submit" value="Stop" />
     </form>
-    <form id="status" action="/latestImageV1/status" method="post">
+    <form id="status" action="/SeaClassificationV1/status" method="post">
       <input type="submit" value="Check Running" />
     </form>
 
@@ -66,6 +66,20 @@
     </div>
 
     <script>
+      function addToConsole(data) {
+        var consoleLog = document.getElementById("console-log");
+        var newLog = document.createElement("div");
+        // get current time in HH:MM:SS format
+        var time = new Date().toLocaleTimeString();
+        newLog.innerText = `[${time}] ` + data;
+        consoleLog.appendChild(newLog);
+        consoleLog.scrollTop = consoleLog.scrollHeight;
+
+        while (consoleLog.children.length > 150) {
+          consoleLog.removeChild(consoleLog.firstChild);
+        }
+      }
+
       function handleSocketEvent(data) {
         var consoleLog = document.getElementById("console-log");
         var newLog = document.createElement("div");
@@ -80,6 +94,20 @@
         }
       }
 
+      var socket;
+      document.addEventListener("DOMContentLoaded", function () {
+        socket = io.connect(
+          "http://" + document.domain + ":" + location.port + "/"
+        );
+        socket.on("connect", function () {
+          console.log("Connected.");
+          addToConsole("Connected.");
+        });
+        socket.on("disconnect", function () {
+          console.log("Connection lost.");
+          addToConsole("Connection lost.");
+        });
+      });
       socket.on("interface_console", handleSocketEvent);
 
       document
@@ -108,12 +136,15 @@
           var formData = new FormData();
           formData.append("interval", interval);
 
-          fetch("/latestImageV1/updateInterval", {
+          fetch("/SeaClassificationV1/updateInterval", {
             method: "POST",
             body: formData,
           })
             .then((response) => response.json())
-            .then((data) => console.log(data))
+            .then((data) => {
+              console.log(data);
+              addToConsole(data.message);
+            })
             .catch((error) => {
               console.error("Error:", error);
             });
@@ -125,16 +156,18 @@
           e.preventDefault();
 
           var API_KEY = document.getElementById("API_KEY").value;
+          var formData = new FormData();
+          formData.append("API_KEY", API_KEY);
 
           fetch("/setKey", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({API_KEY: API_KEY}),
+            body: formData,
           })
             .then((response) => response.json())
-            .then((data) => console.log(data))
+            .then((data) => {
+              console.log(data);
+              addToConsole(data.message);
+            })
             .catch((error) => {
               console.error("Error:", error);
             });
@@ -153,16 +186,20 @@
             body: JSON.stringify({}),
           })
             .then((response) => response.json())
-            .then((data) => console.log(data))
+            .then((data) => {
+              console.log(data);
+              addToConsole(data.message);
+            })
             .catch((error) => {
               console.error("Error:", error);
+              addToConsole({message: "Error: " + error});
             });
         });
 
       document.getElementById("start").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        fetch("/latestImageV1/start", {
+        fetch("/SeaClassificationV1/start", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -170,7 +207,10 @@
           body: JSON.stringify({}),
         })
           .then((response) => response.json())
-          .then((data) => console.log(data))
+          .then((data) => {
+            console.log(data);
+            addToConsole(data.message);
+          })
           .catch((error) => {
             console.error("Error:", error);
           });
@@ -179,7 +219,7 @@
       document.getElementById("stop").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        fetch("/latestImageV1/stop", {
+        fetch("/SeaClassificationV1/stop", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -187,7 +227,10 @@
           body: JSON.stringify({}),
         })
           .then((response) => response.json())
-          .then((data) => console.log(data))
+          .then((data) => {
+            console.log(data);
+            addToConsole(data.message);
+          })
           .catch((error) => {
             console.error("Error:", error);
           });
@@ -198,7 +241,7 @@
         .addEventListener("submit", function (e) {
           e.preventDefault();
 
-          fetch("/latestImageV1/status", {
+          fetch("/SeaClassificationV1/status", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -206,7 +249,10 @@
             body: JSON.stringify({}),
           })
             .then((response) => response.json())
-            .then((data) => console.log(data))
+            .then((data) => {
+              console.log(data);
+              addToConsole(data.message);
+            })
             .catch((error) => {
               console.error("Error:", error);
             });
