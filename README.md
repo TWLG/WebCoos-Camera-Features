@@ -1,4 +1,4 @@
-[![Run Python Tests](https://github.com/TWLG/WebCoos-Camera-Features/actions/workflows/tests.yml/badge.svg)](https://github.com/TWLG/WebCoos-Camera-Features/actions/workflows/tests.yml)
+[![Build and Push Docker Image to Docker Hub](https://github.com/TWLG/WebCoos-Camera-Features/actions/workflows/PushDockerImageToGitHub.yml/badge.svg)](https://github.com/TWLG/WebCoos-Camera-Features/actions/workflows/PushDockerImageToGitHub.yml)
 
 Please look at the [Wiki](https://github.com/TWLG/WebCoos-Camera-Features/wiki) for more documentation.
 <h1>Dev setup</h1>
