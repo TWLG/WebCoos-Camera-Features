@@ -7,7 +7,7 @@ on:
 
 jobs:
   push_to_registry:
-    name: Push Docker Image to Docker Hub
+    name: Build Docker Image
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
