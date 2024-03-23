@@ -7,8 +7,6 @@ from ultralytics import YOLO
 
 
 class SeaConditionsV1:
-    last_image = ''
-
     def run_model(self, image_data):
         """
         Runs the YOLO model on the given image data and returns the predicted class probabilities.
@@ -78,6 +76,13 @@ class SeaConditionsV1:
             # get the image name out of the url
             filename = os.path.basename(latest_image_url)
 
+            # get local dir
+            local_dir = os.path.join(os.path.dirname(os.path.realpath(
+                __file__)), '..', '..', 'collected_data', 'unreviewed', 'SeaConditionsV1')
+            # get the last result in column 1 in the csv file
+            with open(os.path.join(local_dir, 'results.csv'), 'r') as file:
+                last_image = file.readlines()[-1].split(',')[0]
+
             latest_image = Image.open(BytesIO(response.content))
 
             print("Latest image received: " + latest_image_url)
@@ -85,7 +90,10 @@ class SeaConditionsV1:
         except Exception as e:
             return "Error request_latest_image: " + str(e)
 
-        if self.last_image != filename:
+        if last_image != filename:
+            print("=====================================")
+            print(self.last_image, filename)
+            print("=====================================")
             try:
                 print("Running SeaConditionsV1 on latest image...")
 
