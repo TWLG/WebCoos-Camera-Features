@@ -15,6 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
 
+# Define volumes
+VOLUME /app/collected_data
+
 # Run flask_app.py when the container launches
 CMD ["gunicorn", "-k", "eventlet", "-w", "2", "-b", "0.0.0.0:5000", "run_app:app"]
 
