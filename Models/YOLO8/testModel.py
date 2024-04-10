@@ -2,9 +2,9 @@ from ultralytics import YOLO
 import os
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
+from PIL import Image
 
-
-model = YOLO('BroadFilterV1.pt')
+model = YOLO('Models/YOLO8/BroadFilterV1.pt')
 
 # Create Tkinter root window
 root = Tk()
@@ -21,9 +21,10 @@ if image_path:
     # Perform prediction on selected image
     results = model.predict(image_path)
 
-    for result in results:
-        probs = result.probs  # Probs object for classification outputs
-        result.show()  # display to screen
+    probs = results[0].probs
+    results[0].show()
+
+
 else:
     print("No image selected.")
 
