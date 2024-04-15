@@ -45,6 +45,12 @@ class TrainModelApp:
         tk.Label(directory_frame, textvariable=self.path_var, wraplength=320,
                  bg='light gray').grid(row=0, column=1)
 
+        # save response
+        save_response_frame = tk.Frame(main_frame, bg='light gray')
+        save_response_frame.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+        self.save_response_label = tk.Label(save_response_frame, textvariable="", wraplength=320,
+                                            bg='light gray').grid(row=0, column=1)
+
         # Save Image in Class Folder
         save_image_frame = tk.Frame(main_frame, bg='light gray')
         save_image_frame.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
@@ -272,10 +278,14 @@ class TrainModelApp:
 
     def cycle_classname(self):
         if self.original_image and self.prediction_results:
-            class_index = self.prediction_results.index(
-                self.save_class_image.get()) if self.save_class_image.get() in self.prediction_results[0] else 0
-            next_index = (class_index + 1) % len(self.prediction_results[0])
-            next_class = self.prediction_results[next_index]
+            # Find the index in prediction results that self.save_class_image.get() is at. self.save_class_image.get() is in a subarry[0], else if not present set to index 0
+            class_index = next((index for index, subarray in enumerate(
+                self.prediction_results) if subarray[0] == self.save_class_image.get()), 0)
+
+            # Use the total number of subarrays
+            next_index = (class_index + 1) % len(self.prediction_results)
+            next_class = self.prediction_results[next_index][0]
+
             self.save_class_image.delete(0, tk.END)
             self.save_class_image.insert(tk.END, next_class)
 
@@ -291,6 +301,10 @@ class TrainModelApp:
             # Save the predicted image in the folder
             save_path = os.path.join(save_folder, self.original_image_name)
             img.save(save_path)
+
+            # update the label to confirm that the image has been saved
+            self.save_response_label.delete(0, tk.END)
+            self.save_response_label.insert(tk.END, f"Saved {save_path}")
 
 
 def main():
