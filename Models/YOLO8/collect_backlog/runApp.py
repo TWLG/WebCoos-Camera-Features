@@ -37,13 +37,25 @@ class TrainModelApp:
 
         # Directory selection section
         directory_frame = tk.Frame(main_frame, bg='light gray')
-        directory_frame.grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
+        directory_frame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
 
         tk.Button(directory_frame, text="Select Directory",
                   command=self.select_directory).grid(row=0, column=0, pady=5)
         self.path_var = tk.StringVar(value="Selected Directory: None")
-        tk.Label(directory_frame, textvariable=self.path_var, wraplength=550,
+        tk.Label(directory_frame, textvariable=self.path_var, wraplength=320,
                  bg='light gray').grid(row=0, column=1)
+
+        # Save Image in Class Folder
+        save_image_frame = tk.Frame(main_frame, bg='light gray')
+        save_image_frame.grid(row=2, column=0, padx=5, pady=5, sticky=tk.W)
+
+        tk.Button(save_image_frame, text="Save Image",
+                  command=self.save_predicted_image).grid(row=2, column=0, pady=5)
+        tk.Button(save_image_frame, text="cycle class",
+                  command=self.cycle_classname).grid(row=2, column=3, pady=5)
+        self.save_class_image = tk.Entry(save_image_frame)
+        self.save_class_image.insert(tk.END, "No image")
+        self.save_class_image.grid(row=2, column=1)
 
         # Date input section
         date_frame = tk.Frame(main_frame, bg='light gray')
@@ -53,7 +65,7 @@ class TrainModelApp:
         date_label.grid(row=1, column=0)
 
         self.date_entry = tk.Entry(date_frame)
-        self.date_entry.insert(tk.END, "2024-04-07T07:00:00Z")
+        self.date_entry.insert(tk.END, "2024-04-07T13:00:00Z")
         self.date_entry.grid(row=1, column=1)
 
         # Data display section
@@ -146,6 +158,8 @@ class TrainModelApp:
             response = requests.get(url)
             img = Image.open(BytesIO(response.content))
             self.original_image = img.copy()
+            # https://s3.us-west-2.amazonaws.com/webcoos/media/sources/webcoos/groups/uncw/assets/masonboro_inlet/feeds/raw-video-data/products/one-minute-stills/elements/2024/04/07/masonboro_inlet-2024-04-07-130031Z.jpg
+            self.original_image_name = url.split('/')[-1]
 
             if self.predict_mode_var:
                 img = self.predicted_image = self.predict_image(img).copy()
@@ -236,15 +250,47 @@ class TrainModelApp:
 
         im_bgr = results[0].plot()
 
-        probs = results[0].probs
         print("===========")
-        d = results[0].verbose()
-        print(d)
+        class_predictions = results[0].verbose()
+
+        prediction_array = class_predictions.split(",")
+        self.prediction_results = [item.split(
+            " ") for item in prediction_array if item]
+        self.prediction_results = [[value for value in subarray if value]
+                                   for subarray in self.prediction_results if subarray and any(subarray)]
+
+        self.save_class_image.delete(0, tk.END)
+        self.save_class_image.insert(tk.END, self.prediction_results[0][0])
+        print(self.prediction_results)
+
+        print(class_predictions)
 
         print("===========")
         im_rgb = Image.fromarray(im_bgr[..., ::-1])
 
         return im_rgb
+
+    def cycle_classname(self):
+        if self.original_image and self.prediction_results:
+            class_index = self.prediction_results.index(
+                self.save_class_image.get()) if self.save_class_image.get() in self.prediction_results[0] else 0
+            next_index = (class_index + 1) % len(self.prediction_results[0])
+            next_class = self.prediction_results[next_index]
+            self.save_class_image.delete(0, tk.END)
+            self.save_class_image.insert(tk.END, next_class)
+
+    def save_predicted_image(self):
+        if self.selected_folder and self.original_image:
+            img = self.original_image
+            # Create a folder called "saved_prediction_images" if it doesn't exist
+            save_folder = os.path.join(
+                self.selected_folder, "saved_prediction_images", self.save_class_image.get())
+            if not os.path.exists(save_folder):
+                os.makedirs(save_folder)
+
+            # Save the predicted image in the folder
+            save_path = os.path.join(save_folder, self.original_image_name)
+            img.save(save_path)
 
 
 def main():
